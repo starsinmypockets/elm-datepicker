@@ -15,6 +15,7 @@ type alias Model =
     { startDate : Maybe Date
     , endDate : Maybe Date
     , datePicker : DatePicker.DatePicker
+    , datePicker2 : DatePicker.DatePicker
     }
 
 
@@ -53,16 +54,20 @@ init =
     let
         ( datePicker, datePickerFx ) =
             DatePicker.init
+
+        ( datePicker2, datePicker2Fx ) =
+            DatePicker.init
     in
         { startDate = Nothing
         , endDate = Nothing
         , datePicker = datePicker
+        , datePicker2 = datePicker2
         }
-            ! [ Cmd.map ToDatePickerStart datePickerFx, Cmd.map ToDatePickerEnd datePickerFx ]
+            ! [ Cmd.map ToDatePickerStart datePickerFx, Cmd.map ToDatePickerEnd datePicker2Fx ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ datePicker } as model) =
+update msg ({ datePicker, datePicker2 } as model) =
     case msg of
         ToDatePickerStart msg ->
             let
@@ -84,7 +89,7 @@ update msg ({ datePicker } as model) =
         ToDatePickerEnd msg ->
             let
                 ( newDatePicker, datePickerFx, event ) =
-                    DatePicker.update endSettings msg datePicker
+                    DatePicker.update endSettings msg datePicker2
             in
                 { model
                     | endDate =
@@ -94,13 +99,13 @@ update msg ({ datePicker } as model) =
 
                             NoChange ->
                                 model.endDate
-                    , datePicker = newDatePicker
+                    , datePicker2 = newDatePicker
                 }
                     ! [ Cmd.map ToDatePickerStart datePickerFx ]
 
 
 view : Model -> Html Msg
-view ({ startDate, endDate, datePicker } as model) =
+view ({ startDate, endDate, datePicker, datePicker2 } as model) =
     div [ class "col-md-3" ]
         [ form []
             [ div [ class "form-group" ]
@@ -110,7 +115,7 @@ view ({ startDate, endDate, datePicker } as model) =
                 ]
             , div [ class "form-group" ]
                 [ label [] [ text "End date" ]
-                , DatePicker.view endDate endSettings datePicker
+                , DatePicker.view endDate endSettings datePicker2
                     |> Html.map ToDatePickerEnd
                 ]
             , input
