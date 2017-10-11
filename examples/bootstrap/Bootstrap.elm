@@ -7,17 +7,19 @@ import Html.Attributes exposing (class, type_, value)
 
 
 type Msg
-    = ToDatePicker DatePicker.Msg
+    = ToDatePickerStart DatePicker.Msg
+    | ToDatePickerEnd DatePicker.Msg
 
 
 type alias Model =
-    { date : Maybe Date
+    { startDate : Maybe Date
+    , endDate : Maybe Date
     , datePicker : DatePicker.DatePicker
     }
 
 
-settings : DatePicker.Settings
-settings =
+startSettings : DatePicker.Settings
+startSettings =
     let
         isDisabled date =
             dayOfWeek date
@@ -31,47 +33,85 @@ settings =
         }
 
 
+endSettings : DatePicker.Settings
+endSettings =
+    let
+        isDisabled date =
+            dayOfWeek date
+                |> flip List.member [ Sat, Sun ]
+    in
+        { defaultSettings
+            | isDisabled = isDisabled
+            , inputClassList = [ ( "form-control", True ) ]
+            , inputName = Just "end-date"
+            , inputId = Just "end-date-field"
+        }
+
+
 init : ( Model, Cmd Msg )
 init =
     let
         ( datePicker, datePickerFx ) =
             DatePicker.init
     in
-        { date = Nothing
+        { startDate = Nothing
+        , endDate = Nothing
         , datePicker = datePicker
         }
-            ! [ Cmd.map ToDatePicker datePickerFx ]
+            ! [ Cmd.map ToDatePickerStart datePickerFx, Cmd.map ToDatePickerEnd datePickerFx ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ datePicker } as model) =
     case msg of
-        ToDatePicker msg ->
+        ToDatePickerStart msg ->
             let
                 ( newDatePicker, datePickerFx, event ) =
-                    DatePicker.update settings msg datePicker
+                    DatePicker.update startSettings msg datePicker
             in
                 { model
-                    | date =
+                    | startDate =
                         case event of
                             Changed date ->
                                 date
 
                             NoChange ->
-                                model.date
+                                model.startDate
                     , datePicker = newDatePicker
                 }
-                    ! [ Cmd.map ToDatePicker datePickerFx ]
+                    ! [ Cmd.map ToDatePickerStart datePickerFx ]
+
+        ToDatePickerEnd msg ->
+            let
+                ( newDatePicker, datePickerFx, event ) =
+                    DatePicker.update endSettings msg datePicker
+            in
+                { model
+                    | endDate =
+                        case event of
+                            Changed date ->
+                                date
+
+                            NoChange ->
+                                model.endDate
+                    , datePicker = newDatePicker
+                }
+                    ! [ Cmd.map ToDatePickerStart datePickerFx ]
 
 
 view : Model -> Html Msg
-view ({ date, datePicker } as model) =
+view ({ startDate, endDate, datePicker } as model) =
     div [ class "col-md-3" ]
         [ form []
             [ div [ class "form-group" ]
-                [ label [] [ text "Pick a date" ]
-                , DatePicker.view date settings datePicker
-                    |> Html.map ToDatePicker
+                [ label [] [ text "Start date" ]
+                , DatePicker.view startDate startSettings datePicker
+                    |> Html.map ToDatePickerStart
+                ]
+            , div [ class "form-group" ]
+                [ label [] [ text "End date" ]
+                , DatePicker.view endDate endSettings datePicker
+                    |> Html.map ToDatePickerEnd
                 ]
             , input
                 [ type_ "submit"
