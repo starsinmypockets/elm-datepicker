@@ -14,8 +14,8 @@ type Msg
 type alias Model =
     { startDate : Maybe Date
     , endDate : Maybe Date
-    , datePicker : DatePicker.DatePicker
-    , datePicker2 : DatePicker.DatePicker
+    , startDatePicker : DatePicker.DatePicker
+    , endDatePicker : DatePicker.DatePicker
     }
 
 
@@ -29,8 +29,8 @@ startSettings =
         { defaultSettings
             | isDisabled = isDisabled
             , inputClassList = [ ( "form-control", True ) ]
-            , inputName = Just "date"
-            , inputId = Just "date-field"
+            , inputName = Just "start-date"
+            , inputId = Just "start-date-field"
         }
 
 
@@ -52,27 +52,27 @@ endSettings =
 init : ( Model, Cmd Msg )
 init =
     let
-        ( datePicker, datePickerFx ) =
+        ( startDatePicker, startDatePickerFx ) =
             DatePicker.init
 
-        ( datePicker2, datePicker2Fx ) =
+        ( endDatePicker, endDatePickerFx ) =
             DatePicker.init
     in
         { startDate = Nothing
         , endDate = Nothing
-        , datePicker = datePicker
-        , datePicker2 = datePicker2
+        , startDatePicker = startDatePicker
+        , endDatePicker = endDatePicker
         }
-            ! [ Cmd.map ToDatePickerStart datePickerFx, Cmd.map ToDatePickerEnd datePicker2Fx ]
+            ! [ Cmd.map ToDatePickerStart startDatePickerFx, Cmd.map ToDatePickerEnd endDatePickerFx ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ datePicker, datePicker2 } as model) =
+update msg ({ startDatePicker, endDatePicker } as model) =
     case msg of
         ToDatePickerStart msg ->
             let
                 ( newDatePicker, datePickerFx, event ) =
-                    DatePicker.update startSettings msg datePicker
+                    DatePicker.update startSettings msg startDatePicker
             in
                 { model
                     | startDate =
@@ -82,14 +82,14 @@ update msg ({ datePicker, datePicker2 } as model) =
 
                             NoChange ->
                                 model.startDate
-                    , datePicker = newDatePicker
+                    , startDatePicker = newDatePicker
                 }
                     ! [ Cmd.map ToDatePickerStart datePickerFx ]
 
         ToDatePickerEnd msg ->
             let
                 ( newDatePicker, datePickerFx, event ) =
-                    DatePicker.update endSettings msg datePicker2
+                    DatePicker.update endSettings msg endDatePicker
             in
                 { model
                     | endDate =
@@ -99,23 +99,23 @@ update msg ({ datePicker, datePicker2 } as model) =
 
                             NoChange ->
                                 model.endDate
-                    , datePicker2 = newDatePicker
+                    , endDatePicker = newDatePicker
                 }
                     ! [ Cmd.map ToDatePickerStart datePickerFx ]
 
 
 view : Model -> Html Msg
-view ({ startDate, endDate, datePicker, datePicker2 } as model) =
+view ({ startDate, endDate, startDatePicker, endDatePicker } as model) =
     div [ class "col-md-3" ]
         [ form []
             [ div [ class "form-group" ]
                 [ label [] [ text "Start date" ]
-                , DatePicker.view startDate startSettings datePicker
+                , DatePicker.view startDate startSettings startDatePicker
                     |> Html.map ToDatePickerStart
                 ]
             , div [ class "form-group" ]
                 [ label [] [ text "End date" ]
-                , DatePicker.view endDate endSettings datePicker2
+                , DatePicker.view endDate endSettings endDatePicker
                     |> Html.map ToDatePickerEnd
                 ]
             , input
